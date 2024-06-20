@@ -34,3 +34,34 @@ dependencies {
 tasks.named('test') {
 	useJUnitPlatform()
 }
+
+
+
+
+sourceSets {
+	integrationTest {
+		java {
+			compileClasspath += sourceSets.main.output + sourceSets.test.output
+			runtimeClasspath += sourceSets.main.output + sourceSets.test.output
+			srcDir file('src/integration-test/java')
+		}
+		resources.srcDir file('src/integration-test/resources')
+	}
+}
+
+configurations {
+	integrationTestImplementation.extendsFrom testImplementation
+	integrationTestRuntimeOnly.extendsFrom testRuntimeOnly
+}
+
+task integrationTest(type: Test) {
+	description = 'Runs integration tests.'
+	group = 'verification'
+	testClassesDirs = sourceSets.integrationTest.output.classesDirs
+	classpath = sourceSets.integrationTest.runtimeClasspath
+	shouldRunAfter test
+	useJUnitPlatform()
+}
+
+check.dependsOn integrationTest
+

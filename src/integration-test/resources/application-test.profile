@@ -1,0 +1,1 @@
+roomManager.premiumThreshold=100
