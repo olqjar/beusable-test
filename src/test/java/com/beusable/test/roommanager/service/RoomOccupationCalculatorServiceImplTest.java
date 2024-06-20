@@ -9,9 +9,11 @@ import org.springframework.test.context.ActiveProfiles;
 
 import java.math.BigDecimal;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 @SpringBootTest
 @ActiveProfiles("test")
@@ -25,11 +27,59 @@ class RoomOccupationCalculatorServiceImplTest {
             .toList();
 
     @Test
+    void failIfOccupationDataIsNull() {
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> objectUnderTest.calculateOccupation(null)
+        );
+    }
+
+    @Test
+    void failIfRoomConfigurationIsNull() {
+        //given
+        var data = new OccupationData(null, testOffers);
+        //when//then
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> objectUnderTest.calculateOccupation(data)
+        );
+    }
+
+    @Test
+    void failIfOfferListIsNull() {
+        //given
+        var config = new RoomConfiguration(3, 3);
+        var data = new OccupationData(config, null);
+        //when//then
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> objectUnderTest.calculateOccupation(data)
+        );
+
+    }
+
+    @Test
+    void testEmptyOfferList() {
+        //given
+        var config = new RoomConfiguration(3, 3);
+        var data = new OccupationData(config, Collections.emptyList());
+        //when
+        var result = objectUnderTest.calculateOccupation(data);
+        //then
+        assertEquals(0, result.premiumRooms());
+        assertEquals(0, result.economyRooms());
+        assertEquals(BigDecimal.ZERO, result.premiumAmount());
+        assertEquals(BigDecimal.ZERO, result.economyAmount());
+    }
+
+
+    @Test
     void test1() {
         //given
         var config = new RoomConfiguration(3, 3);
+        var data = new OccupationData(config, testOffers);
         //when
-        var result = objectUnderTest.calculateOccupation(new OccupationData(config, testOffers));
+        var result = objectUnderTest.calculateOccupation(data);
         //then
         assertEquals(3, result.premiumRooms());
         assertEquals(3, result.economyRooms());
@@ -41,8 +91,9 @@ class RoomOccupationCalculatorServiceImplTest {
     void test2() {
         //given
         var config = new RoomConfiguration(7, 5);
+        var data = new OccupationData(config, testOffers);
         //when
-        var result = objectUnderTest.calculateOccupation(new OccupationData(config, testOffers));
+        var result = objectUnderTest.calculateOccupation(data);
         //then
         assertEquals(6, result.premiumRooms());
         assertEquals(4, result.economyRooms());
@@ -55,8 +106,9 @@ class RoomOccupationCalculatorServiceImplTest {
     void test3() {
         //given
         var config = new RoomConfiguration(2, 7);
+        var data = new OccupationData(config, testOffers);
         //when
-        var result = objectUnderTest.calculateOccupation(new OccupationData(config, testOffers));
+        var result = objectUnderTest.calculateOccupation(data);
         //then
         assertEquals(2, result.premiumRooms());
         assertEquals(4, result.economyRooms());
@@ -67,8 +119,9 @@ class RoomOccupationCalculatorServiceImplTest {
     void test4_invalid() {
         //given
         var config = new RoomConfiguration(7,1);
+        var data = new OccupationData(config, testOffers);
         //when
-        var result = objectUnderTest.calculateOccupation(new OccupationData(config, testOffers));
+        var result = objectUnderTest.calculateOccupation(data);
         //then
         assertEquals(7, result.premiumRooms());
         assertEquals(1, result.economyRooms());
@@ -79,8 +132,9 @@ class RoomOccupationCalculatorServiceImplTest {
     void test4_fixed() {
         //given
         var config = new RoomConfiguration(7,1);
+        var data = new OccupationData(config, testOffers);
         //when
-        var result = objectUnderTest.calculateOccupation(new OccupationData(config, testOffers));
+        var result = objectUnderTest.calculateOccupation(data);
         //then
         assertEquals(7, result.premiumRooms());
         assertEquals(1, result.economyRooms());
