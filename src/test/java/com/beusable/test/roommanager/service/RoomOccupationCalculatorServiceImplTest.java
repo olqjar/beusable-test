@@ -18,7 +18,7 @@ class RoomOccupationCalculatorServiceImplTest {
             .map(BigDecimal::new)
             .toList();
 
-    private final RoomOccupationCalculatorService testObject = new RoomOccupationCalculatorServiceImpl();
+    private final RoomOccupationCalculatorService testObject = new RoomOccupationCalculatorServiceImpl();//new RoomOccupationCalculatorServiceImpl(BigDecimal.valueOf(100));
 
     @Test
     void test1() {
@@ -60,8 +60,7 @@ class RoomOccupationCalculatorServiceImplTest {
         assertEquals(new BigDecimal("189.99"), result.economyAmount());
     }
 
-    @Test
-    void test4() {
+    void test4_invalid() {
         //given
         var config = new RoomConfiguration(7,1);
         //when
@@ -71,6 +70,18 @@ class RoomOccupationCalculatorServiceImplTest {
         assertEquals(1, result.economyRooms());
         assertEquals(new BigDecimal("1153"), result.premiumAmount());
         assertEquals(new BigDecimal("45.99"), result.economyAmount());
+    }
+    @Test
+    void test4_fixed() {
+        //given
+        var config = new RoomConfiguration(7,1);
+        //when
+        var result = testObject.calculateOccupation(config, testOffers);
+        //then
+        assertEquals(7, result.premiumRooms());
+        assertEquals(1, result.economyRooms());
+        assertEquals(new BigDecimal("1099"), result.premiumAmount());
+        assertEquals(new BigDecimal("99.99"), result.economyAmount());
     }
 
 }
