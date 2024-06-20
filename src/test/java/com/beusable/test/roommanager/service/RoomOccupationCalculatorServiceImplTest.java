@@ -1,5 +1,6 @@
 package com.beusable.test.roommanager.service;
 
+import com.beusable.test.roommanager.model.OccupationData;
 import com.beusable.test.roommanager.model.RoomConfiguration;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,7 +31,7 @@ class RoomOccupationCalculatorServiceImplTest {
         //given
         var config = new RoomConfiguration(3, 3);
         //when
-        var result = objectUnderTest.calculateOccupation(config, testOffers);
+        var result = objectUnderTest.calculateOccupation(new OccupationData(config, testOffers));
         //then
         assertEquals(3, result.premiumRooms());
         assertEquals(3, result.economyRooms());
@@ -43,7 +44,7 @@ class RoomOccupationCalculatorServiceImplTest {
         //given
         var config = new RoomConfiguration(7, 5);
         //when
-        var result = objectUnderTest.calculateOccupation(config, testOffers);
+        var result = objectUnderTest.calculateOccupation(new OccupationData(config, testOffers));
         //then
         assertEquals(6, result.premiumRooms());
         assertEquals(4, result.economyRooms());
@@ -57,7 +58,7 @@ class RoomOccupationCalculatorServiceImplTest {
         //given
         var config = new RoomConfiguration(2, 7);
         //when
-        var result = objectUnderTest.calculateOccupation(config, testOffers);
+        var result = objectUnderTest.calculateOccupation(new OccupationData(config, testOffers));
         //then
         assertEquals(2, result.premiumRooms());
         assertEquals(4, result.economyRooms());
@@ -69,7 +70,7 @@ class RoomOccupationCalculatorServiceImplTest {
         //given
         var config = new RoomConfiguration(7,1);
         //when
-        var result = objectUnderTest.calculateOccupation(config, testOffers);
+        var result = objectUnderTest.calculateOccupation(new OccupationData(config, testOffers));
         //then
         assertEquals(7, result.premiumRooms());
         assertEquals(1, result.economyRooms());
@@ -81,12 +82,11 @@ class RoomOccupationCalculatorServiceImplTest {
         //given
         var config = new RoomConfiguration(7,1);
         //when
-        var result = objectUnderTest.calculateOccupation(config, testOffers);
+        var result = objectUnderTest.calculateOccupation(new OccupationData(config, testOffers));
         //then
         assertEquals(7, result.premiumRooms());
         assertEquals(1, result.economyRooms());
         assertEquals(new BigDecimal("1099"), result.premiumAmount());
         assertEquals(new BigDecimal("99.99"), result.economyAmount());
     }
-
 }

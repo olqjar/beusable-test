@@ -1,6 +1,6 @@
 package com.beusable.test.roommanager.service;
 
-import com.beusable.test.roommanager.model.RoomConfiguration;
+import com.beusable.test.roommanager.model.OccupationData;
 import com.beusable.test.roommanager.model.RoomOccupation;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -23,20 +23,22 @@ public class RoomOccupationCalculatorServiceImpl implements RoomOccupationCalcul
     }
 
     @Override
-    public RoomOccupation calculateOccupation(RoomConfiguration roomConfiguration, List<BigDecimal> guestOffers) {
-        if (roomConfiguration == null || guestOffers == null) {
+    public RoomOccupation calculateOccupation(OccupationData occupationData) {
+        if (occupationData == null || occupationData.roomConfiguration() == null || occupationData.customerOffers() == null) {
             throw new IllegalArgumentException("Arguments can't be null");
         }
+        var offers = occupationData.customerOffers();
+        var roomConfig = occupationData.roomConfiguration();
 
-        var premiumOffers = getOffers(guestOffers, premiumPredicate, roomConfiguration.premiumRooms());
-        var economyOffers = getOffers(guestOffers, economicPredicate, roomConfiguration.economyRooms());
+        var premiumOffers = getOffers(offers, premiumPredicate, roomConfig.premiumRooms());
+        var economyOffers = getOffers(offers, economicPredicate, roomConfig.economyRooms());
 
-        var availablePremiumRooms = roomConfiguration.premiumRooms() - premiumOffers.size();
+        var availablePremiumRooms = roomConfig.premiumRooms() - premiumOffers.size();
 
         if (availablePremiumRooms > 0) {
             premiumOffers = Stream.concat(
                     premiumOffers.stream(),
-                    getOffers(guestOffers, economicPredicate, economyOffers.size(), availablePremiumRooms).stream()
+                    getOffers(offers, economicPredicate, economyOffers.size(), availablePremiumRooms).stream()
             ).toList();
         }
 
