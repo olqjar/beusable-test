@@ -6,16 +6,23 @@ import com.beusable.test.roommanager.model.RoomOccupation;
 import java.math.BigDecimal;
 import java.util.Comparator;
 import java.util.List;
-import java.util.stream.Collectors;
+import java.util.function.Predicate;
+import java.util.stream.Stream;
 
 //@Service
 public class RoomOccupationCalculatorServiceImpl implements RoomOccupationCalculatorService {
 
-    final BigDecimal premiumThreshold;
+    final Predicate<BigDecimal> premiumPredicate;
+    final Predicate<BigDecimal> economicPredicate;
 //@Value("${roommanager.premiumThreshold}") BigDecimal premiumThreshold
     public RoomOccupationCalculatorServiceImpl() {
+
+        var premiumThreshold = BigDecimal.valueOf(100);
+
+        premiumPredicate = offer -> offer.compareTo(premiumThreshold) >= 0;
+        economicPredicate = offer -> offer.compareTo(premiumThreshold) < 0;
         //this.premiumThreshold = premiumThreshold;
-        this.premiumThreshold = BigDecimal.valueOf(100);
+
     }
 
     @Override
@@ -24,38 +31,49 @@ public class RoomOccupationCalculatorServiceImpl implements RoomOccupationCalcul
             throw new IllegalArgumentException("Arguments can't be null");
         }
 
-        var premiumOffers = guestOffers.stream()
-                .filter(offer -> offer.compareTo(premiumThreshold) >= 0)
-                .sorted(Comparator.reverseOrder())
-                .limit(roomConfiguration.premiumRooms())
-                .toList();
-        
-        var economyOffers = guestOffers.stream()
-                .filter(offer -> offer.compareTo(premiumThreshold) < 0)
-                .sorted(Comparator.reverseOrder())
+        var premiumOffers = getOffers(guestOffers, premiumPredicate, roomConfiguration.premiumRooms());
+        var economyOffers = getOffers(guestOffers, economicPredicate, roomConfiguration.economyRooms());
 
-                .collect(Collectors.toList());
+        var availablePremiumRooms = roomConfiguration.premiumRooms() - premiumOffers.size();
 
-        var premiumRoomsOccupied = premiumOffers.size();
-        var premiumRoomsAmount = premiumOffers.stream().reduce(BigDecimal.ZERO, BigDecimal::add);
-
-        var economyRoomsOccupied = economyOffers.size() < roomConfiguration.economyRooms() ? economyOffers.size() : roomConfiguration.economyRooms();
-        var economyRoomsAmount = economyOffers.stream().limit(economyRoomsOccupied).reduce(BigDecimal.ZERO, BigDecimal::add);
-
-        if (economyRoomsOccupied < economyOffers.size() && roomConfiguration.premiumRooms() > premiumRoomsOccupied) {
-            var economyOffersToUpgrade = economyOffers.stream()
-                    .skip(economyRoomsOccupied)
-                    .limit(roomConfiguration.premiumRooms() - premiumRoomsOccupied)
-                    .toList();
-            premiumRoomsOccupied += economyOffersToUpgrade.size();
-            premiumRoomsAmount = economyOffersToUpgrade.stream().reduce(premiumRoomsAmount, BigDecimal::add);
+        if (availablePremiumRooms > 0) {
+            premiumOffers = Stream.concat(
+                    premiumOffers.stream(),
+                    getOffers(guestOffers, economicPredicate, economyOffers.size(), availablePremiumRooms).stream()
+            ).toList();
         }
 
         return new RoomOccupation(
-                premiumRoomsOccupied,
-                economyRoomsOccupied,
-                premiumRoomsAmount,
-                economyRoomsAmount
+                premiumOffers.size(),
+                economyOffers.size(),
+                premiumOffers.stream().reduce(BigDecimal.ZERO, BigDecimal::add),
+                economyOffers.stream().reduce(BigDecimal.ZERO, BigDecimal::add)
         );
+    }
+
+    private List<BigDecimal> getOffers(
+            List<BigDecimal> guestOffers,
+            Predicate<BigDecimal> predicate,
+            int roomsToSkip,
+            int availableRooms
+    ) {
+        return guestOffers.stream()
+                .filter(predicate)
+                .sorted(Comparator.reverseOrder())
+                .skip(roomsToSkip)
+                .limit(availableRooms)
+                .toList();
+    }
+
+    private List<BigDecimal> getOffers(
+            List<BigDecimal> guestOffers,
+            Predicate<BigDecimal> predicate,
+            int availableRooms
+    ) {
+        return guestOffers.stream()
+                .filter(predicate)
+                .sorted(Comparator.reverseOrder())
+                .limit(availableRooms)
+                .toList();
     }
 }
