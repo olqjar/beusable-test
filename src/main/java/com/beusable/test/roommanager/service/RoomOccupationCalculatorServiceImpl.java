@@ -2,6 +2,8 @@ package com.beusable.test.roommanager.service;
 
 import com.beusable.test.roommanager.model.RoomConfiguration;
 import com.beusable.test.roommanager.model.RoomOccupation;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.util.Comparator;
@@ -9,20 +11,15 @@ import java.util.List;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
 
-//@Service
+@Service
 public class RoomOccupationCalculatorServiceImpl implements RoomOccupationCalculatorService {
 
     final Predicate<BigDecimal> premiumPredicate;
     final Predicate<BigDecimal> economicPredicate;
-//@Value("${roommanager.premiumThreshold}") BigDecimal premiumThreshold
-    public RoomOccupationCalculatorServiceImpl() {
 
-        var premiumThreshold = BigDecimal.valueOf(100);
-
-        premiumPredicate = offer -> offer.compareTo(premiumThreshold) >= 0;
-        economicPredicate = offer -> offer.compareTo(premiumThreshold) < 0;
-        //this.premiumThreshold = premiumThreshold;
-
+    public RoomOccupationCalculatorServiceImpl(@Value("${roomManager.premiumThreshold}") BigDecimal premiumThreshold) {
+        this.premiumPredicate = offer -> offer.compareTo(premiumThreshold) >= 0;
+        this.economicPredicate = offer -> offer.compareTo(premiumThreshold) < 0;
     }
 
     @Override
